@@ -1,0 +1,296 @@
+from tkinter import*
+
+class Book:
+    def __init__(self, title, author, genre, year_release, quantity_free):
+        self.title = title
+        self.author = author
+        self.year_release = year_release
+        self.genre = genre
+        self.quantity_free = quantity_free
+
+from datetime import datetime, timedelta
+class Person:
+    def __init__(self, name, age, address):
+        self.name = name
+        self.age = age
+        self.address = address
+        self.books_borrowed = []
+        self.books_returned = []
+
+
+class Library:
+    def __init__(self, parent):
+        self.parent = parent
+        self.books = []
+        self.current_index = 0
+        self.current_user = None
+        self.parent.title("Library Management System")
+        self.parent.geometry("400x300")
+
+    def login(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Name:").grid(row=0, column=0)
+        self.username_var = StringVar()
+        Entry(self.main_frame, textvariable=self.username_var).grid(row=0, column=1)
+
+        Label(self.main_frame, text="Age:").grid(row=1, column=0)
+        self.age_var = StringVar()
+        Entry(self.main_frame, textvariable=self.age_var).grid(row=1, column=1)
+
+        Label(self.main_frame, text="Address:").grid(row=2, column=0)
+        self.address_var = StringVar()
+        Entry(self.main_frame, textvariable=self.address_var).grid(row=2, column=1)
+
+        Button(self.main_frame, text="Login", command=self.login_user).grid(row=3, column=0, columnspan=2)
+
+    def login_user(self):
+        name = self.username_var.get()
+        age = self.age_var.get()
+        address = self.address_var.get()
+
+        self.current_user = Person(name, age, address)
+        self.show_main_menu()
+        print(f"User '{name}' logged in.")
+        
+
+        
+
+    def show_main_menu(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Button(self.main_frame, text="Add to Library",command=self.add_to_library).grid(row=0, column=0)
+        Button(self.main_frame, text="View Library", command=self.view_library).grid(row=1, column=0)
+        Button(self.main_frame, text="Search Book", command=self.search_book).grid(row=2, column=0)
+        Button(self.main_frame, text="Withdraw or Return book", command=self.withdraw_return_book).grid(row=3, column=0)
+        Button(self.main_frame, text="Log out", command=self.login_user).grid(row=4, column=0)
+
+    def add_to_library(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+            
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Title:").grid(row=0, column=0)
+        self.name_var = StringVar()
+        Entry(self.main_frame, textvariable=self.name_var).grid(row=0, column=1)
+
+        Label(self.main_frame, text="Author:").grid(row=1, column=0)
+        self.author_var = StringVar()
+        Entry(self.main_frame, textvariable=self.author_var).grid(row=1, column=1)
+
+        Label(self.main_frame, text="Genre:").grid(row=2, column=0)
+        self.genre_var = StringVar()
+        Entry(self.main_frame, textvariable=self.genre_var).grid(row=2, column=1)
+
+        Label(self.main_frame, text="Year Published:").grid(row=3, column=0)
+        self.year_var = StringVar()
+        Entry(self.main_frame, textvariable=self.year_var).grid(row=3, column=1)
+
+        Label(self.main_frame, text="Quantity Free:").grid(row=4, column=0)
+        self.quantity_var = IntVar()
+        Entry(self.main_frame, textvariable=self.quantity_var).grid(row=4, column=1)  
+
+        Button(self.main_frame, text="Add Book", command=self.add_book).grid(row=5, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to main menu", command=self.show_main_menu).grid(row=6, column=0, columnspan=2)
+
+    def add_book(self):
+        title = self.name_var.get()
+        author = self.author_var.get()
+        genre = self.genre_var.get()
+        year_release = self.year_var.get()
+        quantity_free = self.quantity_var.get()
+         
+        book = Book(title, author, genre, year_release, quantity_free)
+        self.books.append(book)
+         
+        self.show_main_menu()
+        print(f"Book '{title}' added to the library.")
+
+    def view_library(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget() 
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0)
+
+        self.info_frame = LabelFrame(self.main_frame, text="Book Information", padx=10, pady=10)
+        self.info_frame.grid(row=0, column=0, columnspan=2)
+
+        button_frame = Frame(self.main_frame)
+        button_frame.grid(row=1, column=0, columnspan=2)
+        Button(button_frame, text="Previous", command=self.show_previous).pack(side=LEFT)
+        Button(button_frame, text="Next", command=self.show_next).pack(side=LEFT)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=2, column=0, columnspan=2)
+
+        self.show_book_info()
+
+    def show_previous(self):
+        if self.current_index > 0:
+            self.current_index -= 1
+            self.show_book_info()
+        elif self.current_index == 0:
+            self.current_index = len(self.books) - 1
+            self.show_book_info()
+
+    def show_next(self):
+        if self.current_index < len(self.books) - 1:
+            self.current_index += 1
+            self.show_book_info()
+        elif self.current_index == len(self.books) - 1:
+            self.current_index = 0
+            self.show_book_info()
+
+    def show_book_info(self):
+        for widget in self.info_frame.winfo_children():
+            widget.grid_forget()
+
+        if len(self.books) == 0:
+            Label(self.info_frame, text="No books available").grid(row=0, column=0)
+            return
+
+        book = self.books[self.current_index]
+        Label(self.info_frame, text=f"Title: {book.title}").grid(row=0, column=0, sticky=W)
+        Label(self.info_frame, text=f"Year released: {book.year_release}").grid(row=1, column=0, sticky=W)
+        Label(self.info_frame, text=f"Author: {book.author}").grid(row=2, column=0, sticky=W)
+        Label(self.info_frame, text=f"Genre: {book.genre}").grid(row=3, column=0, sticky=W)
+        Label(self.info_frame, text=f"Quantity Free: {book.quantity_free}").grid(row=4, column=0, sticky=W)
+
+    def search_book(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+        
+        Label(self.main_frame, text="Search Book").grid(row=0, column=0)
+        Label(self.main_frame, text="Title:").grid(row=1, column=0)
+        self.search_var = StringVar()
+        Entry(self.main_frame, textvariable=self.search_var).grid(row=1, column=1)
+        Button(self.main_frame, text="Search", command=self.perform_search).grid(row=2, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=3, column=0, columnspan=2)
+
+    def perform_search(self):
+        search_title = self.search_var.get()
+        for book in self.books:
+            if book.title.lower() == search_title.lower():
+                self.show_search_result(book)
+                return
+            else:
+                Label(self.main_frame, text="Book not found, please try again").grid(row=4, column=0, columnspan=2)
+                return
+                
+
+    def show_search_result(self, book):
+        for widget in self.main_frame.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+        
+        Label(self.main_frame, text="Search Result").grid(row=0, column=0)
+        Label(self.main_frame, text=f"Title: {book.title}").grid(row=1, column=0, sticky=W)
+        Label(self.main_frame, text=f"Year released: {book.year_release}").grid(row=2, column=0, sticky=W)
+        Label(self.main_frame, text=f"Author: {book.author}").grid(row=3, column=0, sticky=W)
+        Label(self.main_frame, text=f"Genre: {book.genre}").grid(row=4, column=0, sticky=W)
+        Label(self.main_frame, text=f"Quantity Free: {book.quantity_free}").grid(row=5, column=0, sticky=W)
+
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=6, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Search", command=self.search_book).grid(row=7, column=0, columnspan=2)
+        
+    def withdraw_return_book(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+        
+        Label(self.main_frame, text="Withdraw or Return Book").grid(row=0, column=0)
+        Label(self.main_frame, text="Title:").grid(row=1, column=0)
+        self.search_var = StringVar()
+        Entry(self.main_frame, textvariable=self.search_var).grid(row=1, column=1)
+        Button(self.main_frame, text="Withdraw", command=self.withdraw_book).grid(row=2, column=0, columnspan=2)
+        Button(self.main_frame, text="Return", command=self.return_book).grid(row=3, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=4, column=0, columnspan=2)
+
+    def withdraw_book(self):
+        search_title = self.search_var.get()
+        for book in self.books:
+            if book.title.lower() == search_title.lower():
+                if book.quantity_free > 0:
+                    book.quantity_free -= 1
+
+                    borrowed_date = datetime.now()
+                    return_date = borrowed_date + timedelta(days=14)
+                    self.current_user.books_borrowed.append(book)
+                    Label(self.main_frame, text=f"Book '{book.title}' borrowed successfully. Due date: {return_date.strftime('%Y-%m-%d')}").grid(row=5, column=0, columnspan=2)
+                    self.view_borrowed_books() 
+                    Bvutton(self.main_frame, text="View borrowed books", command=self.view_borrowed_books)
+                    Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu)
+                else:
+                    Label(self.main_frame, text="Book is not available.").grid(row=5, column=0, columnspan=2)
+                return
+                
+    def return_book(self):
+        search_title = self.search_var.get()
+        for book in self.books:
+            if book in self.current_user.books_borrowed:
+                book.quantity_free += 1
+                borrow_date, due_date = self.current_user.books_borrowed[book]
+                self.current_user.books_returned[book] = (borrow_date, datetime.now())
+                del self.current_user.books_borrowed[book]
+                Label(self.main_frame, text=f"Book '{book.title}' returned successfully.").grid(row=5, column=0, columnspan=2)
+                self.view_borrowed_books()
+            else:
+                Label(self.main_frame, text="You haven't borrowed this book.").grid(row=5, column=0, columnspan=2)
+                return
+                
+
+    def view_borrowed_books(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Borrowed Books").grid(row=0, column=0)
+        for i, book in enumerate(books_borrowed):
+            if len(books_borrowed) > 0:
+                Label(self.main_frame, text=f"{i+1}. {book.title}").grid(row=i+1, column=0, sticky=W)
+            else:
+                Label(self.main_frame, text="No books borrowed").grid(row=i+1, column=0, sticky=W)
+
+        Label(self.main_frame, text="Returned Books").grid(row=len(books_borrowed)+1, column=0)
+        for i, book in enumerate(books_returned):
+            if len(books_returned) > 0:
+                Label(self.main_frame, text=f"{i+1}. {book.title}").grid(row=len(books_borrowed)+i+2, column=0, sticky=W)
+            else:
+                Label(self.main_frame, text="No books returned").grid(row=len(books_borrowed)+i+2, column=0, sticky=W)
+            
+
+if __name__ == "__main__":
+    root = Tk()
+    library = Library(root)
+    library.books = [
+        Book("To Kill a Mockingbird", "Harper Lee", "Fiction", 1960, 5),
+        Book("1984", "George Orwell", "Dystopian", 1949, 6),
+        Book("The Great Gatsby", "F. Scott Fitzgerald", "Classic", 1925, 7),
+        Book("Moby-Dick", "Herman Melville", "Adventure", 1851, 8),
+        Book("Pride and Prejudice", "Jane Austen", "Romance", 1813, 9),
+        Book("The Catcher in the Rye", "J.D. Salinger", "Coming-of-age", 1951, 10),
+        Book("The Hobbit", "J.R.R. Tolkien", "Fantasy", 1937, 11),
+        Book("The Lord of the Rings", "J.R.R. Tolkien", "Fantasy", 1954, 4),
+        Book("Harry Potter and the Philosopher's Stone", "J.K. Rowling", "Fantasy", 1997, 3),
+        Book("The Da Vinci Code", "Dan Brown", "Mystery", 2003, 2)
+    ]
+    library.login()
+    root.mainloop()
