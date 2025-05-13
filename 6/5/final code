@@ -1,0 +1,326 @@
+from tkinter import *
+from datetime import datetime, timedelta
+
+class Book:
+    """A class to represent a book."""
+    def __init__(self, title, author, genre, year_release, quantity_free):
+        """Initialize attributes to describe a book."""
+        self.title = title
+        self.author = author
+        self.year_release = year_release
+        self.genre = genre
+        self.quantity_free = quantity_free
+
+class Person:
+    """A class to represent a person."""
+    def __init__(self, name, age, address):
+        """Initialize attributes to describe a person."""
+        self.name = name
+        self.age = age
+        self.address = address
+        self.books_borrowed = []
+        self.books_returned = []
+
+class Library:
+    """A class to represent a library."""
+    def __init__(self, parent):
+        """Initialize attributes to describe a library."""
+        self.parent = parent
+        self.books = []
+        self.current_index = 0
+        self.current_user = None
+        self.parent.title("Library Management System")
+        self.parent.geometry("500x500")
+
+    # Starts validation for name, age, address, book title, author, year, quantity and genre. creates an error message if the input is invalid. Then later on when neccesary it adds the message to a larger message and is presented as a label  
+    def validate_name(self, name):
+        """Validate the name input."""
+        if not name or len(name) < 2 or not all(c.isalpha() or c.isspace() for c in name):
+            return False, "Name must be at least 2 characters and contain only letters"
+        return True, ""
+
+    def validate_age(self, age):
+        """Validate the age input."""
+        if not age or not all(c.isdigit() for c in age):
+            return False, "Age must be a number"
+        age_num = int(age)
+        if age_num <= 7 or age_num >= 120:
+            return False, "Age must be between 8 and 120"
+        return True, ""
+
+    def validate_adress(self, adress):
+        """Validate the address input."""
+        if not adress or len(adress) <= 4:
+            return False, "Address must be at least 5 characters"
+        return True, ""
+
+    # Starts the login screen, where the user can enter their name, age and address. If the input is valid, the user is logged in and the main menu is shown. If the input is invalid, an error message is shown.
+    def login(self):
+        """Show the login screen."""
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Name:").grid(row=0, column=0)
+        self.username_var = StringVar()
+        Entry(self.main_frame, textvariable=self.username_var).grid(row=0, column=1)
+
+        Label(self.main_frame, text="Age:").grid(row=1, column=0)
+        self.age_var = StringVar()
+        Entry(self.main_frame, textvariable=self.age_var).grid(row=1, column=1)
+
+        Label(self.main_frame, text="Address:").grid(row=2, column=0)
+        self.address_var = StringVar()
+        Entry(self.main_frame, textvariable=self.address_var).grid(row=2, column=1)
+
+        Button(self.main_frame, text="Login", command=self.login_user).grid(row=3, column=0, columnspan=2)
+
+    # Logs in the user if the input is valid. If the input is invalid, an error message is shown.
+    def login_user(self):
+        """Log in the user."""
+        name = self.username_var.get()
+        age = self.age_var.get()
+        address = self.address_var.get()
+
+        valid_name, name_msg = self.validate_name(name)
+        valid_age, age_msg = self.validate_age(age)
+        valid_address, addr_msg = self.validate_adress(address)
+
+        error_msg = ""
+        if not valid_name:
+            error_msg += name_msg + "\n"
+        if not valid_age:
+            error_msg += age_msg + "\n"
+        if not valid_address:
+            error_msg += addr_msg + "\n"
+
+        if error_msg:
+            error_label = Label(self.main_frame, text=error_msg, fg="red")
+            error_label.grid(row=4, column=0, columnspan=2)
+            return
+
+        self.current_user = Person(name, age, address)
+        self.show_main_menu()
+        print(f"User '{name}' logged in.")
+
+    # Logs out the user and shows the login screen.
+    def logout(self):
+        """Log out the user."""
+        self.current_user = None
+        self.login()
+
+    # Shows the main menu, where the user can choose to add a book to the library, view the library, search for a book, withdraw or return a book, view borrowed/returned books or log out.
+    def show_main_menu(self):
+        """Show the main menu."""
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Button(self.main_frame, text="View Library", command=self.view_library).grid(row=1, column=0)
+        Button(self.main_frame, text="Search Book", command=self.search_book).grid(row=2, column=0)
+        Button(self.main_frame, text="Withdraw or Return book", command=self.withdraw_return_book).grid(row=3, column=0)
+        Button(self.main_frame, text="View borrowed/returned books", command=self.view_borrowed_books).grid(row=4, column=0)
+        Button(self.main_frame, text="Log out", command=self.logout).grid(row=5, column=0)
+
+        name = self.username_var.get()
+        age = self.age_var.get()
+        address = self.address_var.get()
+        Label(self.main_frame, text=f"Name: {name}\nAge: {age}\nAddress: {address}").grid(row=6, column=0, columnspan=2)
+
+
+    # Shows the library screen, where the user can view the books in the library. The user can also navigate through the books using the previous and next buttons.
+    def view_library(self):
+        """Show the library screen."""
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0)
+
+        self.info_frame = LabelFrame(self.main_frame, text="Book Information", padx=10, pady=10)
+        self.info_frame.grid(row=0, column=0, columnspan=2)
+
+        button_frame = Frame(self.main_frame)
+        button_frame.grid(row=1, column=0, columnspan=2)
+        Button(button_frame, text="Previous", command=self.show_previous).pack(side=LEFT)
+        Button(button_frame, text="Next", command=self.show_next).pack(side=LEFT)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=2, column=0, columnspan=2)
+
+        self.show_book_info()
+
+    def show_previous(self):
+        """Show the previous book in the library."""
+        if self.current_index > 0:
+            self.current_index -= 1
+            self.show_book_info()
+        elif self.current_index == 0:
+            self.current_index = len(self.books) - 1
+            self.show_book_info()
+
+    def show_next(self):
+        """Show the next book in the library."""
+        if self.current_index < len(self.books) - 1:
+            self.current_index += 1
+            self.show_book_info()
+        elif self.current_index == len(self.books) - 1:
+            self.current_index = 0
+            self.show_book_info()
+
+    # Shows the book information. If there are no books in the library, a message is shown.
+    def show_book_info(self):
+        """Show the book information."""
+        for widget in self.info_frame.winfo_children():
+            widget.grid_forget()
+
+        if len(self.books) == 0:
+            Label(self.info_frame, text="No books available").grid(row=0, column=0)
+            return
+
+        book = self.books[self.current_index]
+        Label(self.info_frame, text=f"Title: {book.title}").grid(row=0, column=0, sticky=W)
+        Label(self.info_frame, text=f"Year released: {book.year_release}").grid(row=1, column=0, sticky=W)
+        Label(self.info_frame, text=f"Author: {book.author}").grid(row=2, column=0, sticky=W)
+        Label(self.info_frame, text=f"Genre: {book.genre}").grid(row=3, column=0, sticky=W)
+        Label(self.info_frame, text=f"Quantity Free: {book.quantity_free}").grid(row=4, column=0, sticky=W)
+
+    # Shows the search book screen, where the user can enter the book's title. If the book is found, the book information is shown. If the book is not found, an error message is shown.
+    def search_book(self):
+        """Show the search book screen."""
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Search Book").grid(row=0, column=0)
+        Label(self.main_frame, text="Title:").grid(row=1, column=0)
+        self.search_var = StringVar()
+        Entry(self.main_frame, textvariable=self.search_var).grid(row=1, column=1)
+        Button(self.main_frame, text="Search", command=self.perform_search).grid(row=2, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=3, column=0, columnspan=2)
+
+    # Performs the search for the book. If the book is found, the book information is shown. If the book is not found, an error message is shown.
+    def perform_search(self):
+        """Perform the search for the book."""
+        search_title = self.search_var.get()
+        for book in self.books:
+            if book.title.lower() == search_title.lower():
+                self.show_search_result(book)
+                return
+        Label(self.main_frame, text="Book not found, please try again").grid(row=4, column=0, columnspan=2)
+
+    # Shows the search result, and displays the information of the book.
+    def show_search_result(self, book):
+        """Show the search result."""
+        for widget in self.main_frame.winfo_children():
+            widget.grid_forget()
+
+        Label(self.main_frame, text="Search Result").grid(row=0, column=0)
+        Label(self.main_frame, text=f"Title: {book.title}").grid(row=1, column=0, sticky=W)
+        Label(self.main_frame, text=f"Year released: {book.year_release}").grid(row=2, column=0, sticky=W)
+        Label(self.main_frame, text=f"Author: {book.author}").grid(row=3, column=0, sticky=W)
+        Label(self.main_frame, text=f"Genre: {book.genre}").grid(row=4, column=0, sticky=W)
+        Label(self.main_frame, text=f"Quantity Free: {book.quantity_free}").grid(row=5, column=0, sticky=W)
+
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=6, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Search", command=self.search_book).grid(row=7, column=0, columnspan=2)
+
+    # Shows the withdraw/return book screen, where the user can enter the book's title. If the book is found, the book is withdrawn or returned. If the book is not found, an error message is shown.
+    def withdraw_return_book(self):
+        """Show the withdraw/return book screen."""
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Withdraw or Return Book").grid(row=0, column=0)
+        Label(self.main_frame, text="Title:").grid(row=1, column=0)
+        self.search_var = StringVar()
+        Entry(self.main_frame, textvariable=self.search_var).grid(row=1, column=1)
+        Button(self.main_frame, text="Withdraw", command=self.withdraw_book).grid(row=2, column=0, columnspan=2)
+        Button(self.main_frame, text="Return", command=self.return_book).grid(row=3, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=4, column=0, columnspan=2)
+
+    # Withdraws the book if the book is found and available. If the book is not found or not available, an error message is shown. creates a label with the due date of the book.
+    def withdraw_book(self):
+        """Withdraw the book."""
+        search_title = self.search_var.get()
+        for book in self.books:
+            if book.title.lower() == search_title.lower():
+                if book.quantity_free > 0:
+                    book.quantity_free -= 1
+                    borrowed_date = datetime.now()
+                    return_date = borrowed_date + timedelta(days=14)
+                    self.current_user.books_borrowed.append(book)
+                    Label(self.main_frame, text=f"Book '{book.title}' borrowed successfully. Due date: {return_date.strftime('%Y-%m-%d')}").grid(row=5, column=0, columnspan=2)
+                    Button(self.main_frame, text="View Borrowed Books", command=self.view_borrowed_books).grid(row=6, column=0, columnspan=2)
+                    Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=7, column=0, columnspan=2)
+                else:
+                    Label(self.main_frame, text="Book is not available.").grid(row=5, column=0, columnspan=2)
+                return
+
+    # creates the return book function, where the user can return the book. If the book has been borrowed, the book is returned. If the book has not been borrowed, an error message is shown.
+    def return_book(self):
+        """Return the book."""
+        search_title = self.search_var.get()
+        for book in self.books:
+            if book in self.current_user.books_borrowed:
+                book.quantity_free += 1
+                self.current_user.books_returned.append(book)
+                self.current_user.books_borrowed.remove(book)
+                Label(self.main_frame, text=f"Book '{book.title}' returned successfully.").grid(row=5, column=0, columnspan=2)
+                Button(self.main_frame, text="View Borrowed Books", command=self.view_borrowed_books).grid(row=6, column=0, columnspan=2)
+                Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=7, column=0, columnspan=2)
+                return
+        Label(self.main_frame, text="You haven't borrowed this book.").grid(row=5, column=0, columnspan=2)
+
+    # Shows the borrowed/returned books screen, where the user can view the books they have borrowed or returned.
+    def view_borrowed_books(self):
+        """Show the borrowed books screen."""
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+        Label(self.main_frame, text="Borrowed Books").grid(row=0, column=0)
+        if len(self.current_user.books_borrowed) > 0:
+            for i, book in enumerate(self.current_user.books_borrowed):
+                Label(self.main_frame, text=f"{i+1}. {book.title} - Due date: {(datetime.now() + timedelta(days=14)).strftime('%Y-%m-%d')}").grid(row=i+1, column=0, sticky=W)
+        else:
+            Label(self.main_frame, text="No books borrowed").grid(row=1, column=0, sticky=W)
+
+        current_row = len(self.current_user.books_borrowed) + 2
+        Label(self.main_frame, text="Returned Books").grid(row=current_row, column=0)
+        if len(self.current_user.books_returned) > 0:
+            for i, book in enumerate(self.current_user.books_returned):
+                Label(self.main_frame, text=f"{i+1}. {book.title}").grid(row=current_row+i+1, column=0, sticky=W)
+        else:
+            Label(self.main_frame, text="No books returned").grid(row=current_row+1, column=0, sticky=W)
+
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=current_row+len(self.current_user.books_returned)+2, column=0)
+
+# Runs the library management system.
+if __name__ == "__main__":
+    """Run the library management system."""
+    root = Tk()
+    library = Library(root)
+    library.books = [
+        Book("To Kill a Mockingbird", "Harper Lee", "Fiction", 1960, 5),
+        Book("1984", "George Orwell", "Dystopian", 1949, 6),
+        Book("The Great Gatsby", "F. Scott Fitzgerald", "Classic", 1925, 7),
+        Book("Moby-Dick", "Herman Melville", "Adventure", 1851, 8),
+        Book("Pride and Prejudice", "Jane Austen", "Romance", 1813, 9),
+        Book("The Catcher in the Rye", "J.D. Salinger", "Coming-of-age", 1951, 10),
+        Book("The Hobbit", "J.R.R. Tolkien", "Fantasy", 1937, 11),
+        Book("The Lord of the Rings", "J.R.R. Tolkien", "Fantasy", 1954, 4),
+        Book("Harry Potter and the Philosopher's Stone", "J.K. Rowling", "Fantasy", 1997, 3),
+        Book("The Da Vinci Code", "Dan Brown", "Mystery", 2003, 2)
+    ]
+    library.login()
+    root.mainloop()
