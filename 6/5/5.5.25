@@ -1,5 +1,7 @@
-from tkinter import *
+from tkinter import*
 
+
+# Creates the book class
 class Book:
     def __init__(self, title, author, genre, year_release, quantity_free):
         self.title = title
@@ -8,26 +10,89 @@ class Book:
         self.genre = genre
         self.quantity_free = quantity_free
 
+
+from datetime import datetime, timedelta
+
+
+# Creates the person class
+class Person:
+    def __init__(self, name, age, address):
+        self.name = name
+        self.age = age
+        self.address = address
+        self.books_borrowed = []
+        self.books_returned = []
+
+
+# Creates the library class
 class Library:
     def __init__(self, parent):
         self.parent = parent
         self.books = []
         self.current_index = 0
+        self.current_user = None
         self.parent.title("Library Management System")
-        self.parent.geometry("400x300")
+        self.parent.geometry("500x500")
 
+
+    # Makes the login frame which stores the name, age and address of the user
+    def login(self):
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
+
+
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
+
+        Label(self.main_frame, text="Name:").grid(row=0, column=0)
+        self.username_var = StringVar()
+        Entry(self.main_frame, textvariable=self.username_var).grid(row=0, column=1)
+
+
+        Label(self.main_frame, text="Age:").grid(row=1, column=0)
+        self.age_var = StringVar()
+        Entry(self.main_frame, textvariable=self.age_var).grid(row=1, column=1)
+
+
+        Label(self.main_frame, text="Address:").grid(row=2, column=0)
+        self.address_var = StringVar()
+        Entry(self.main_frame, textvariable=self.address_var).grid(row=2, column=1)
+
+
+        Button(self.main_frame, text="Login", command=self.login_user).grid(row=3, column=0, columnspan=2)
+
+
+    # Logs in the user and creates a new person object
+    def login_user(self):
+        name = self.username_var.get()
+        age = self.age_var.get()
+        address = self.address_var.get()
+
+
+        self.current_user = Person(name, age, address)
+        self.show_main_menu()
+        print(f"User '{name}' logged in.")
+
+
+    # Shows the main menu, the main menu is the first thing the user sees after logging in and enables them to choose between viewing the library, searching for a book, withdrawing or returning a book and logging out. 
     def show_main_menu(self):
         for widget in self.parent.winfo_children():
             widget.grid_forget()
 
+
         self.main_frame = Frame(self.parent, padx=10, pady=10)
         self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+
 
         Button(self.main_frame, text="Add to Library",command=self.add_to_library).grid(row=0, column=0)
         Button(self.main_frame, text="View Library", command=self.view_library).grid(row=1, column=0)
         Button(self.main_frame, text="Search Book", command=self.search_book).grid(row=2, column=0)
         Button(self.main_frame, text="Withdraw or Return book", command=self.withdraw_return_book).grid(row=3, column=0)
+        Button(self.main_frame, text="Log out", command=self.login_user).grid(row=4, column=0)
 
+
+    # Creates a function that enables the user to add a book to the library
     def add_to_library(self):
         for widget in self.parent.winfo_children():
             widget.grid_forget()
@@ -35,29 +100,37 @@ class Library:
         self.main_frame = Frame(self.parent, padx=10, pady=10)
         self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
 
+
         Label(self.main_frame, text="Title:").grid(row=0, column=0)
         self.name_var = StringVar()
         Entry(self.main_frame, textvariable=self.name_var).grid(row=0, column=1)
+
 
         Label(self.main_frame, text="Author:").grid(row=1, column=0)
         self.author_var = StringVar()
         Entry(self.main_frame, textvariable=self.author_var).grid(row=1, column=1)
 
+
         Label(self.main_frame, text="Genre:").grid(row=2, column=0)
         self.genre_var = StringVar()
         Entry(self.main_frame, textvariable=self.genre_var).grid(row=2, column=1)
+
 
         Label(self.main_frame, text="Year Published:").grid(row=3, column=0)
         self.year_var = StringVar()
         Entry(self.main_frame, textvariable=self.year_var).grid(row=3, column=1)
 
+
         Label(self.main_frame, text="Quantity Free:").grid(row=4, column=0)
         self.quantity_var = IntVar()
         Entry(self.main_frame, textvariable=self.quantity_var).grid(row=4, column=1)  
 
+
         Button(self.main_frame, text="Add Book", command=self.add_book).grid(row=5, column=0, columnspan=2)
         Button(self.main_frame, text="Back to main menu", command=self.show_main_menu).grid(row=6, column=0, columnspan=2)
 
+
+    #  Adds the book to the library and creates a new book object
     def add_book(self):
         title = self.name_var.get()
         author = self.author_var.get()
@@ -71,15 +144,20 @@ class Library:
         self.show_main_menu()
         print(f"Book '{title}' added to the library.")
 
+
+    # Creates a function that enables the user to view all the books in the library by scrolling through them
     def view_library(self):
         for widget in self.parent.winfo_children():
             widget.grid_forget() 
 
+
         self.main_frame = Frame(self.parent, padx=10, pady=10)
         self.main_frame.grid(row=0, column=0)
 
+
         self.info_frame = LabelFrame(self.main_frame, text="Book Information", padx=10, pady=10)
         self.info_frame.grid(row=0, column=0, columnspan=2)
+
 
         button_frame = Frame(self.main_frame)
         button_frame.grid(row=1, column=0, columnspan=2)
@@ -87,8 +165,11 @@ class Library:
         Button(button_frame, text="Next", command=self.show_next).pack(side=LEFT)
         Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=2, column=0, columnspan=2)
 
+
         self.show_book_info()
 
+
+    # Creates functions that enable the user to scroll back through the books in the library
     def show_previous(self):
         if self.current_index > 0:
             self.current_index -= 1
@@ -96,7 +177,8 @@ class Library:
         elif self.current_index == 0:
             self.current_index = len(self.books) - 1
             self.show_book_info()
-
+            
+    # Creates functions that enable the user to scroll forward through the books in the library
     def show_next(self):
         if self.current_index < len(self.books) - 1:
             self.current_index += 1
@@ -105,13 +187,17 @@ class Library:
             self.current_index = 0
             self.show_book_info()
 
+
+    # Creates a function that displays the book information and formats it in a way that is easy to read
     def show_book_info(self):
         for widget in self.info_frame.winfo_children():
             widget.grid_forget()
 
+
         if len(self.books) == 0:
             Label(self.info_frame, text="No books available").grid(row=0, column=0)
             return
+
 
         book = self.books[self.current_index]
         Label(self.info_frame, text=f"Title: {book.title}").grid(row=0, column=0, sticky=W)
@@ -120,14 +206,19 @@ class Library:
         Label(self.info_frame, text=f"Genre: {book.genre}").grid(row=3, column=0, sticky=W)
         Label(self.info_frame, text=f"Quantity Free: {book.quantity_free}").grid(row=4, column=0, sticky=W)
 
+
+    # Creates a function that enables the user to search for a book by title
     def search_book(self):
-        pass  # To be implemented
+        for widget in self.parent.winfo_children():
+            widget.grid_forget()
 
-    def withdraw_return_book(self):
-        pass  # To be implemented
 
-if __name__ == "__main__":
-    root = Tk()
-    library = Library(root)
-    library.show_main_menu()
-    root.mainloop()
+        self.main_frame = Frame(self.parent, padx=10, pady=10)
+        self.main_frame.grid(row=0, column=0, sticky=(W, E, N, S))
+        
+        Label(self.main_frame, text="Search Book").grid(row=0, column=0)
+        Label(self.main_frame, text="Title:").grid(row=1, column=0)
+        self.search_var = StringVar()
+        Entry(self.main_frame, textvariable=self.search_var).grid(row=1, column=1)
+        Button(self.main_frame, text="Search", command=self.perform_search).grid(row=2, column=0, columnspan=2)
+        Button(self.main_frame, text="Back to Main Menu", command=self.show_main_menu).grid(row=3, column=0, columnspan=2)
